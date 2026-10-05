@@ -1,0 +1,44 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "dnscale-webhook.selfSignedIssuer" . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "dnscale-webhook.rootCACertificate" . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  secretName: {{ include "dnscale-webhook.rootCACertificate" . }}
+  duration: 43800h
+  issuerRef:
+    name: {{ include "dnscale-webhook.selfSignedIssuer" . }}
+  commonName: "ca.dnscale-webhook.cert-manager"
+  isCA: true
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "dnscale-webhook.rootCAIssuer" . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  ca:
+    secretName: {{ include "dnscale-webhook.rootCACertificate" . }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "dnscale-webhook.servingCertificate" . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  secretName: {{ include "dnscale-webhook.servingCertificate" . }}
+  duration: 8760h
+  issuerRef:
+    name: {{ include "dnscale-webhook.rootCAIssuer" . }}
+  dnsNames:
+    - {{ include "dnscale-webhook.fullname" . }}
+    - {{ include "dnscale-webhook.fullname" . }}.{{ .Release.Namespace }}
+    - {{ include "dnscale-webhook.fullname" . }}.{{ .Release.Namespace }}.svc

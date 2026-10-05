@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dnscale-webhook.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app: {{ include "dnscale-webhook.name" . }}
+    release: {{ .Release.Name }}

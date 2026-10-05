@@ -1,0 +1,9 @@
+.git
+.gocache
+.env*
+bin
+dist
+*.tgz
+coverage.out
+.test-api-token
+**/__pycache__

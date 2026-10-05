@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging-dnscale
+spec:
+  acme:
+    email: admin@example.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging-dnscale-account
+    solvers:
+      - dns01:
+          webhook:
+            groupName: acme.dnscale.eu
+            solverName: dnscale
+            config:
+              apiTokenSecretRef:
+                name: dnscale-api-token
+                key: api-token

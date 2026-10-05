@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Test and vet
+        run: |
+          go test -race -count=1 ./...
+          go vet ./...
+          test -z "$(gofmt -l *.go)"
+      - uses: azure/setup-helm@v4.3.0
+        with:
+          version: v3.19.0
+      - name: Validate chart
+        run: |
+          helm lint deploy/dnscale-webhook --strict
+          helm template dnscale deploy/dnscale-webhook --namespace cert-manager > /tmp/webhook.yaml
+      - name: Build image
+        run: docker build -t dnscale-webhook:ci .
+      - uses: helm/kind-action@v1
+        with:
+          version: v0.33.0
+          node_image: kindest/node:v1.35.0
+          kubectl_version: v1.35.0
+          cluster_name: webhook
+      - name: Verify installed webhook
+        run: |
+          kind load docker-image dnscale-webhook:ci --name webhook
+          helm install cert-manager https://charts.jetstack.io/charts/cert-manager-v1.19.3.tgz \
+            --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 180s
+          helm install dnscale deploy/dnscale-webhook --namespace cert-manager \
+            --set image.repository=dnscale-webhook --set image.tag=ci --set image.pullPolicy=Never \
+            --wait --timeout 180s
+          kubectl wait apiservice/v1alpha1.acme.dnscale.eu --for=condition=Available --timeout=60s
+          test "$(kubectl auth can-i get secret/dnscale-api-token -n cert-manager \
+            --as system:serviceaccount:cert-manager:dnscale-dnscale-webhook)" = yes
+          if kubectl auth can-i get secret/unrelated -n cert-manager \
+            --as system:serviceaccount:cert-manager:dnscale-dnscale-webhook; then
+            echo 'Webhook must not read unrelated Secrets'
+            exit 1
+          fi
+      - name: Show cluster diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods,certificates -n cert-manager || true
+          kubectl describe apiservice v1alpha1.acme.dnscale.eu || true
+          kubectl logs -n cert-manager deployment/dnscale-dnscale-webhook --tail=100 || true

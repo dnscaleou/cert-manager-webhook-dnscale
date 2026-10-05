@@ -1,0 +1,33 @@
+groupName: acme.dnscale.eu
+
+certManager:
+  namespace: cert-manager
+  serviceAccountName: cert-manager
+
+image:
+  repository: ghcr.io/dnscaleou/cert-manager-webhook-dnscale
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Each entry grants read access only to the named credential Secrets.
+# An empty namespace uses certManager.namespace (the default ClusterIssuer
+# resource namespace). Add an entry for each namespace using an Issuer.
+secretAccess:
+  - namespace: ""
+    secretNames:
+      - dnscale-api-token
+
+service:
+  type: ClusterIP
+  port: 443
+
+securePort: 8443
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

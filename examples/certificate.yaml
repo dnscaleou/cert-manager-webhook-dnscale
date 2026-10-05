@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dnscale-example
+  namespace: default
+spec:
+  secretName: dnscale-example-tls
+  issuerRef:
+    name: letsencrypt-staging-dnscale
+    kind: ClusterIssuer
+  dnsNames:
+    - example.com
+    - "*.example.com"

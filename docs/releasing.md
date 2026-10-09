@@ -26,9 +26,10 @@ It publishes the GitHub release only when these checks pass.
 
 ## First publication
 
-GitHub initially creates GHCR packages as private, even for public source
-repositories. In the DNScale organization's GitHub package settings, make both
-`cert-manager-webhook-dnscale` and `charts/cert-manager-webhook-dnscale` public.
+New GHCR packages can be private even when their source repository is public.
+In the DNScale organization's GitHub package settings, check that both
+`cert-manager-webhook-dnscale` and `charts/cert-manager-webhook-dnscale` are public;
+change their visibility if needed.
 Confirm that both are associated with this repository and inherit its access.
 If the anonymous verification job ran before visibility was changed, rerun only
 the failed jobs after changing visibility. Leave the release in draft until

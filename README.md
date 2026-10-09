@@ -9,14 +9,14 @@ and `ClusterIssuer` resources.
 - API: `https://api.dnscale.eu`
 - Challenge TXT TTL: 300 seconds
 
-The source and Helm chart are in this repository. A public GHCR image and OCI
-chart are **not published by the CI workflow**. Until release artifacts are
-published, build an image in a registry your cluster can access and install the
-chart from this checkout as described below.
+Versioned releases include a public Linux AMD64/ARM64 container image, an OCI
+Helm chart, and a chart archive with checksums on
+[GitHub Releases](https://github.com/dnscaleou/cert-manager-webhook-dnscale/releases).
+The image version is `v1.0.0`; the Helm chart version is `1.0.0`.
 
-## Build and install
+## Install
 
-Prerequisites: a Kubernetes cluster with cert-manager installed, Helm 3+, and a
+Prerequisites: a Kubernetes cluster with cert-manager installed, Helm 3.8+, and a
 DNScale-hosted zone publicly delegated to its assigned nameservers. Merely
 creating a zone in the dashboard does not make it publicly resolvable.
 
@@ -25,12 +25,32 @@ dependencies match cert-manager 1.19.3's Kubernetes libraries; keep those aligne
 when upgrading, because mismatched versions can compile but fail on startup.
 
 ```sh
-git clone https://github.com/dnscaleou/cert-manager-webhook-dnscale.git
+helm install cert-manager-webhook-dnscale \
+  oci://ghcr.io/dnscaleou/charts/cert-manager-webhook-dnscale \
+  --version 1.0.0 --namespace cert-manager \
+  --set fullnameOverride=cert-manager-webhook-dnscale \
+  --wait --timeout 180s
+
+kubectl wait apiservice/v1alpha1.acme.dnscale.eu \
+  --for=condition=Available --timeout=60s
+```
+
+The chart uses `ghcr.io/dnscaleou/cert-manager-webhook-dnscale:v1.0.0` by default.
+Both packages can be pulled without registry credentials. The release notes
+include the immutable image digest, and the attached `SHA256SUMS` verifies the
+downloadable chart archive.
+
+### Build from source
+
+For a custom build or a local development cluster:
+
+```sh
+git clone --branch v1.0.0 https://github.com/dnscaleou/cert-manager-webhook-dnscale.git
 cd cert-manager-webhook-dnscale
 
 # Choose a registry/repository that your cluster can pull from.
 IMAGE_REPOSITORY=registry.example.com/your-team/cert-manager-webhook-dnscale
-IMAGE_TAG=1.0.0
+IMAGE_TAG=v1.0.0
 docker build -t "$IMAGE_REPOSITORY:$IMAGE_TAG" .
 docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
 
@@ -90,8 +110,10 @@ cert-manager's cluster resource namespace or service account, adjust
 
 ## Issue a staging certificate
 
-Replace the example email and DNS names in [the examples](examples/). Start with
-Let's Encrypt staging, which issues certificates that browsers do not trust:
+Download the [versioned examples](https://github.com/dnscaleou/cert-manager-webhook-dnscale/tree/v1.0.0/examples)
+into a local `examples/` directory, then replace their email and DNS names.
+Start with Let's Encrypt staging, which issues certificates that browsers do
+not trust:
 
 ```sh
 kubectl apply -f examples/clusterissuer-staging.yaml
@@ -178,3 +200,8 @@ kubectl describe apiservice v1alpha1.acme.dnscale.eu
 kubectl -n cert-manager logs deployment/cert-manager-webhook-dnscale
 kubectl get challenges -A
 ```
+
+## Releasing
+
+See [the release procedure](docs/releasing.md) for version updates, tag pushes,
+first-publication package visibility, and the anonymous installation gate.

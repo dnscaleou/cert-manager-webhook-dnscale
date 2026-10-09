@@ -25,7 +25,7 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ include "dnscale-webhook.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:

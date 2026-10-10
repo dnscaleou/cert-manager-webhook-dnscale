@@ -4,7 +4,7 @@ Small, focused pull requests are welcome. Explain the problem, expected behavior
 and verification performed. Contributions are provided under the
 [Apache-2.0 license](LICENSE). See [MAINTAINERS.md](MAINTAINERS.md) for support.
 
-Follow the [README verification instructions](README.md#verification). Run Go
+Use Go 1.26 and follow the [test guide](docs/testing.md). Run Go
 formatting, race tests, vet, and strict Helm lint before submitting. Changes to
 record handling must preserve other TXT values and remain safe when retried.
 Changes to the chart must retain named-Secret access restrictions.

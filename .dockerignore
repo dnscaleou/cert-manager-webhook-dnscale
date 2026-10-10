@@ -1,5 +1,6 @@
 .git
 .gocache
+.cache
 .env*
 bin
 dist

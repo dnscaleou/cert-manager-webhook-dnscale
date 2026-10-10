@@ -65,6 +65,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/dnscaleou/cert-manager-webhook-dnscale
             org.opencontainers.image.version=${{ github.ref_name }}
             org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
       - name: Publish OCI chart and prepare release assets
         run: |
           printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
@@ -92,7 +93,10 @@ jobs:
 
           The chart archive and SHA256SUMS are also attached below.
           See the [README](https://github.com/$GITHUB_REPOSITORY/blob/$RELEASE_TAG/README.md)
-          for credentials and staging issuance. Tested with Kubernetes 1.35.0 and cert-manager 1.19.3.
+          for credentials and staging issuance. Installation and RBAC are tested with Kubernetes 1.35.0
+          and cert-manager 1.20.4 and 1.21.2. Strict upstream DNS01 conformance runs against local API/DNS fixtures;
+          see the [test guide](https://github.com/$GITHUB_REPOSITORY/blob/$RELEASE_TAG/docs/testing.md)
+          for opt-in live validation and its requirements.
           EOF
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release edit "$RELEASE_TAG" --notes-file dist/release-notes.md
@@ -137,7 +141,7 @@ jobs:
           cluster_name: release
       - name: Install published chart and image
         run: |
-          helm install cert-manager https://charts.jetstack.io/charts/cert-manager-v1.19.3.tgz \
+          helm install cert-manager https://charts.jetstack.io/charts/cert-manager-v1.21.2.tgz \
             --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 180s
           helm install cert-manager-webhook-dnscale oci://ghcr.io/dnscaleou/charts/cert-manager-webhook-dnscale \
             --version "${RELEASE_TAG#v}" --namespace cert-manager \

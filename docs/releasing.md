@@ -7,7 +7,11 @@ Helm chart uses the corresponding SemVer version without `v` (`1.0.0`).
    `image.tag` in `values.yaml`, and the README installation examples. The chart
    name must remain `cert-manager-webhook-dnscale` to match its OCI path. Keep
    the default `nameOverride` to preserve names and selectors for source installs.
-2. Run the Go race tests and vet, strict Helm lint, and workflow validation.
+2. Run `make test`, `make test-conformance`, the Python script tests
+   (`python3 -m unittest discover -s scripts -p 'test_*.py'`), strict Helm lint,
+   and workflow validation. Review the installation matrix in CI and the
+   [test guide](testing.md). Record live test results separately from fixture
+   conformance; ordinary CI does not perform public DNS writes.
    Commit the release checkpoint and push `master`.
 3. Create and push an annotated tag, for example:
 

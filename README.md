@@ -20,9 +20,10 @@ Prerequisites: a Kubernetes cluster with cert-manager installed, Helm 3.8+, and 
 DNScale-hosted zone publicly delegated to its assigned nameservers. Merely
 creating a zone in the dashboard does not make it publicly resolvable.
 
-The installed-chart checks use Kubernetes 1.35.0 and cert-manager 1.19.3. The Go
-dependencies match cert-manager 1.19.3's Kubernetes libraries; keep those aligned
-when upgrading, because mismatched versions can compile but fail on startup.
+The installation matrix uses Kubernetes 1.35.0 with cert-manager 1.20.4 and
+1.21.2. Source builds require Go 1.26. The Go dependencies match cert-manager
+1.21.2's Kubernetes libraries; keep those aligned when upgrading, because
+mismatched versions can compile but fail on startup.
 
 ```sh
 helm install cert-manager-webhook-dnscale \
@@ -145,18 +146,22 @@ The token must cover the resulting validation zone.
 
 ## Verification
 
-Live validation with Kubernetes 1.35.0 and cert-manager 1.19.3 confirmed Let's
-Encrypt staging issuance for an apex domain and its wildcard, renewal, and
-challenge TXT cleanup.
+The original v1.0.0 live validation used Kubernetes 1.35.0 and cert-manager
+1.19.3 and confirmed Let's Encrypt staging issuance, wildcard certificates,
+renewal, and challenge TXT cleanup. The supported-version installation matrix
+and upstream DNS01 conformance checks are described in
+[the test guide](docs/testing.md).
 
 ```sh
-GOCACHE="$PWD/.gocache" go test -race -count=1 ./...
-GOCACHE="$PWD/.gocache" go vet ./...
+make test
+make test-conformance
 helm lint deploy/dnscale-webhook --strict
 ```
 
-CI also builds the image, installs cert-manager and this chart in kind, waits for
-the webhook's APIService, and checks that credential access is restricted.
+CI runs cert-manager's upstream `RunConformance` suite in strict mode using
+local API and DNS fixtures. It also builds the image, installs both supported
+cert-manager versions and this chart in kind, waits for the webhook's APIService,
+and checks that credential access is restricted.
 The unit tests exercise the solver with Kubernetes Secret lookup and documented
 API response fixtures, pagination, timeouts, repeated operations, and multiple
 TXT values at one owner.
@@ -178,6 +183,11 @@ two concurrent TXT values, selective and repeated cleanup, and restoration of
 the original TXT values. It does not request an ACME certificate or verify
 public DNS propagation. Use the staging Certificate flow above for that final
 check. The script cleans up only its own randomly generated TXT values.
+
+For repeatable live conformance, staging issuance, wildcard renewal, and
+authoritative TXT cleanup checks, follow [the test guide](docs/testing.md).
+The `Live DNS01 validation` workflow requires an explicit manual dispatch and
+credentials configured in the protected `dns01-live` environment.
 
 Some DNScale API versions return HTTP 500 when asked to remove content that is
 already absent. On that response the webhook independently lists the records

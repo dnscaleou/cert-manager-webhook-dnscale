@@ -1,4 +1,5 @@
 .gocache/
+.cache/
 .env*
 bin/
 dist/

@@ -1,0 +1,76 @@
+name: Live DNS01 validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-dns01
+  cancel-in-progress: false
+
+jobs:
+  live:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: dns01-live
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        cert-manager: [v1.20.4, v1.21.2]
+    env:
+      DNSCALE_TEST_ZONE: ${{ vars.DNSCALE_TEST_ZONE }}
+      ACME_EMAIL: ${{ vars.ACME_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: azure/setup-helm@v4.3.0
+        with:
+          version: v3.19.0
+      - name: Prepare scoped token
+        env:
+          DNSCALE_TEST_API_TOKEN: ${{ secrets.DNSCALE_TEST_API_TOKEN }}
+        run: |
+          test -n "$DNSCALE_TEST_ZONE" && test -n "$ACME_EMAIL" && test -n "$DNSCALE_TEST_API_TOKEN"
+          umask 077
+          printf '%s' "$DNSCALE_TEST_API_TOKEN" > "$RUNNER_TEMP/dnscale-token"
+      - name: Live upstream DNS01 conformance
+        env:
+          DNSCALE_LIVE_TESTS: 'true'
+          DNSCALE_TEST_TOKEN_FILE: ${{ runner.temp }}/dnscale-token
+        run: make test-live-conformance
+      - name: Install cmctl
+        run: |
+          curl --fail --location --retry 3 -o cmctl_linux_amd64 https://github.com/cert-manager/cmctl/releases/download/v2.6.1/cmctl_linux_amd64
+          curl --fail --location --retry 3 -o checksums.txt https://github.com/cert-manager/cmctl/releases/download/v2.6.1/checksums.txt
+          grep ' cmctl_linux_amd64$' checksums.txt | sha256sum --check
+          chmod +x cmctl_linux_amd64
+          sudo mv cmctl_linux_amd64 /usr/local/bin/cmctl
+      - name: Build image
+        run: docker build -t dnscale-webhook:live .
+      - uses: helm/kind-action@v1
+        with:
+          version: v0.33.0
+          node_image: kindest/node:v1.35.0
+          kubectl_version: v1.35.0
+          cluster_name: live
+      - name: Install webhook and verify staging issuance and renewal
+        env:
+          CERT_MANAGER_VERSION: ${{ matrix.cert-manager }}
+        run: |
+          kind load docker-image dnscale-webhook:live --name live
+          helm install cert-manager "https://charts.jetstack.io/charts/cert-manager-${CERT_MANAGER_VERSION}.tgz" \
+            --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 180s
+          helm install cert-manager-webhook-dnscale deploy/dnscale-webhook --namespace cert-manager \
+            --set fullnameOverride=cert-manager-webhook-dnscale \
+            --set image.repository=dnscale-webhook --set image.tag=live --set image.pullPolicy=Never --wait --timeout 180s
+          python3 scripts/verify-staging.py --context kind-live \
+            --zone "$DNSCALE_TEST_ZONE" --email "$ACME_EMAIL" --token-file "$RUNNER_TEMP/dnscale-token"
+      - name: Remove local credential file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/dnscale-token"

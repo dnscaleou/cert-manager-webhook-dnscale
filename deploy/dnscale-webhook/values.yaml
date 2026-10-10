@@ -6,7 +6,7 @@ certManager:
 
 image:
   repository: ghcr.io/dnscaleou/cert-manager-webhook-dnscale
-  tag: "v1.0.0"
+  tag: "v1.0.1"
   pullPolicy: IfNotPresent
 
 # Preserve resource names and selectors used by the original source chart.

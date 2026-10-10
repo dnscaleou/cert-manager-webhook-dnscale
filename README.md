@@ -12,7 +12,7 @@ and `ClusterIssuer` resources.
 Versioned releases include a public Linux AMD64/ARM64 container image, an OCI
 Helm chart, and a chart archive with checksums on
 [GitHub Releases](https://github.com/dnscaleou/cert-manager-webhook-dnscale/releases).
-The image version is `v1.0.0`; the Helm chart version is `1.0.0`.
+The image version is `v1.0.1`; the Helm chart version is `1.0.1`.
 
 ## Install
 
@@ -28,7 +28,7 @@ mismatched versions can compile but fail on startup.
 ```sh
 helm install cert-manager-webhook-dnscale \
   oci://ghcr.io/dnscaleou/charts/cert-manager-webhook-dnscale \
-  --version 1.0.0 --namespace cert-manager \
+  --version 1.0.1 --namespace cert-manager \
   --set fullnameOverride=cert-manager-webhook-dnscale \
   --wait --timeout 180s
 
@@ -36,7 +36,7 @@ kubectl wait apiservice/v1alpha1.acme.dnscale.eu \
   --for=condition=Available --timeout=60s
 ```
 
-The chart uses `ghcr.io/dnscaleou/cert-manager-webhook-dnscale:v1.0.0` by default.
+The chart uses `ghcr.io/dnscaleou/cert-manager-webhook-dnscale:v1.0.1` by default.
 Both packages can be pulled without registry credentials. The release notes
 include the immutable image digest, and the attached `SHA256SUMS` verifies the
 downloadable chart archive.
@@ -46,12 +46,12 @@ downloadable chart archive.
 For a custom build or a local development cluster:
 
 ```sh
-git clone --branch v1.0.0 https://github.com/dnscaleou/cert-manager-webhook-dnscale.git
+git clone --branch v1.0.1 https://github.com/dnscaleou/cert-manager-webhook-dnscale.git
 cd cert-manager-webhook-dnscale
 
 # Choose a registry/repository that your cluster can pull from.
 IMAGE_REPOSITORY=registry.example.com/your-team/cert-manager-webhook-dnscale
-IMAGE_TAG=v1.0.0
+IMAGE_TAG=v1.0.1
 docker build -t "$IMAGE_REPOSITORY:$IMAGE_TAG" .
 docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
 
@@ -111,7 +111,7 @@ cert-manager's cluster resource namespace or service account, adjust
 
 ## Issue a staging certificate
 
-Download the [versioned examples](https://github.com/dnscaleou/cert-manager-webhook-dnscale/tree/v1.0.0/examples)
+Download the [versioned examples](https://github.com/dnscaleou/cert-manager-webhook-dnscale/tree/v1.0.1/examples)
 into a local `examples/` directory, then replace their email and DNS names.
 Start with Let's Encrypt staging, which issues certificates that browsers do
 not trust:

@@ -1,8 +1,8 @@
 apiVersion: v2
 name: cert-manager-webhook-dnscale
 description: DNScale DNS01 webhook solver for cert-manager
-version: 1.0.0
-appVersion: "v1.0.0"
+version: 1.0.1
+appVersion: "v1.0.1"
 home: https://github.com/dnscaleou/cert-manager-webhook-dnscale
 sources:
   - https://github.com/dnscaleou/cert-manager-webhook-dnscale

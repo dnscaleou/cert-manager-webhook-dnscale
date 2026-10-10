@@ -92,6 +92,8 @@ jobs:
           \`\`\`
 
           The chart archive and SHA256SUMS are also attached below.
+          Read the [changelog](https://github.com/$GITHUB_REPOSITORY/blob/$RELEASE_TAG/CHANGELOG.md)
+          for changes in this release.
           See the [README](https://github.com/$GITHUB_REPOSITORY/blob/$RELEASE_TAG/README.md)
           for credentials and staging issuance. Installation and RBAC are tested with Kubernetes 1.35.0
           and cert-manager 1.20.4 and 1.21.2. Strict upstream DNS01 conformance runs against local API/DNS fixtures;

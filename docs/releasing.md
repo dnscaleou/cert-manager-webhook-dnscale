@@ -4,7 +4,7 @@ Releases use Git tags such as `v1.0.0`. The image uses that exact tag, while the
 Helm chart uses the corresponding SemVer version without `v` (`1.0.0`).
 
 1. Update `version` and `appVersion` in `deploy/dnscale-webhook/Chart.yaml`,
-   `image.tag` in `values.yaml`, and the README installation examples. The chart
+   `image.tag` in `values.yaml`, the README installation examples, and `CHANGELOG.md`. The chart
    name must remain `cert-manager-webhook-dnscale` to match its OCI path. Keep
    the default `nameOverride` to preserve names and selectors for source installs.
 2. Run `make test`, `make test-conformance`, the Python script tests

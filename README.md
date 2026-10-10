@@ -205,3 +205,14 @@ kubectl get challenges -A
 
 See [the release procedure](docs/releasing.md) for version updates, tag pushes,
 first-publication package visibility, and the anonymous installation gate.
+
+## Operations and contribution
+
+For operating this webhook alongside ExternalDNS, see
+[Kubernetes DNS and TLS operations with DNScale](https://dnscale.eu/learning/kubernetes-dns-tls-operations).
+See [maintainers and support](MAINTAINERS.md), [contribution instructions](CONTRIBUTING.md),
+and [security reporting](SECURITY.md).
+
+## License
+
+[Apache-2.0](LICENSE).
